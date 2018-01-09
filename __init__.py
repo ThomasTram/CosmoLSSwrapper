@@ -6,13 +6,12 @@
 Last updated December 20, 2017. Based on the CosmoMC module.
 """
 import numpy as np
-import pandas as pd
 import scipy.linalg as la
 import scipy.special
 import montepython.io_mp as io_mp
 import os
 from montepython.likelihood_class import Likelihood_sn
-from pyLogLikeCosmoLSS import interpolation_init_all, set_this, loglkl_from_fortran, set_stuff, set_mp_overlap
+from pyLogLikeCosmoLSS import interpolation_init_all, set_this, loglkl_from_fortran, set_stuff, set_mp_overlap, set_sources
 
 T_CMB = 2.7255     #CMB temperature
 h = 6.62606957e-34     #Planck's constant
@@ -105,7 +104,6 @@ class CosmoLSS(Likelihood_sn):
         self.arraysjfull = []
         for nz in range(4):
             fname = self.data_directory+'/lensingrsdfiles/hendriknz/nz_z'+str(nz+1)+'_kids_boot'+str(0)+'.dat' #!bootstrap DIR
-            print fname
             tmp = np.loadtxt(fname)
             tmp[:,1] /= (np.sum(tmp[:,1])*0.05)
             self.arraysjfull.append(tmp)
@@ -186,12 +184,20 @@ class CosmoLSS(Likelihood_sn):
         logParams = np.array([self.use_morell, self.use_rombint, self.use_conservative,
                                   self.use_cmass_overlap, self.use_lowz_overlap, self.use_2dfloz_overlap, self.use_2dfhiz_overlap],dtype='int32')
 
-        print self.arraysjfull[0].shape, self.bes0arr.shape, self.lens_redshifts['cmass'].shape, self.invcovxipm.shape
-        set_this(self.arraysjfull[0], self.arraysjfull[1], self.arraysjfull[2], self.arraysjfull[3],
-                     self.lens_redshifts['lowz'], self.lens_redshifts['2dfloz'], self.lens_redshifts['cmass'],self.lens_redshifts['2dfhiz'],
+        set_this(self.lens_redshifts['lowz'], self.lens_redshifts['2dfloz'], self.lens_redshifts['cmass'],self.lens_redshifts['2dfhiz'],
                      self.xipm, self.invcovxipm, self.sizcov, self.ellgentestarrini, self.maskelements, len(self.maskelements),
                      self.bes0arr, self.bes4arr, self.bes2arr, intParams, logParams)
-        
+
+    def update_sources(self, bootnum=0):
+        # !!!Reading in source distributions according to bootnum
+        print 'Using bootstrap '+str(bootnum)
+        arraysjfull = []
+        for nz in range(4):
+            fname = self.data_directory+'/lensingrsdfiles/hendriknz/nz_z'+str(nz+1)+'_kids_boot'+str(bootnum)+'.dat' #!bootstrap DIR
+            tmp = np.loadtxt(fname)
+            tmp[:,1] /= (np.sum(tmp[:,1])*0.05)
+            arraysjfull.append(tmp)
+        set_sources(arraysjfull[0],arraysjfull[1],arraysjfull[2],arraysjfull[3])
         
     def loglkl(self, cosmo, data):
         """
@@ -223,6 +229,8 @@ class CosmoLSS(Likelihood_sn):
         interpolation_init_all(1./(1.+bg['z']), bg['H [1/Mpc]'], bg['comov. dist.'], bg['gr.fac. D'],  bg['gr.fac. f'], len(bg['z']),
                                    self.logkh_for_pk, self.z_for_pk, pk_l, pk_nl, self.Nk, self.Nz)
 
+        # Update bootstrap sources with integer corresponding to bootstrap realisation 0-999
+        self.update_sources(np.random.randint(0,999))
        
         #Finally, recover nuisance parameters and call the Fortran likelihood:
         nuisance = {}

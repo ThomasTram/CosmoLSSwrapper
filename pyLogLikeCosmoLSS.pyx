@@ -6,8 +6,9 @@ cdef extern from "pyLogLikeCosmoLSS.h":
     void c_interpolation_init_all(double *z, double *H, double * conf_dist, double *D,  double *f, int *size_z, double *kvec, double *zvec,  double *pk, double *pk_nl, int *size_kvec, int*size_zvec)
     void c_set_stuff(double *CosmoParams);
     void c_set_mp_overlap(double *ConMat, int *size_ConMat, int *intParams, double *realParams, int *which_sample);
-    void c_set_this(double *af1, double *af2, double *af3, double *af4, double *lenslowz, double *lens2dfloz, double *lenscmass, double *lens2dfhiz, double *xipm, double *invcovxipm, int *sizcov, double *ellini, double *maskelements, int *size_maskelements, double *bes0arr,double *bes4arr,double *bes2arr, int *intParams, int *logParams)
+    void c_set_this(double *lenslowz, double *lens2dfloz, double *lenscmass, double *lens2dfhiz, double *xipm, double *invcovxipm, int *sizcov, double *ellini, double *maskelements, int *size_maskelements, double *bes0arr,double *bes4arr,double *bes2arr, int *intParams, int *logParams)
     void c_cosmolss_lnlike(double * DataParams, double *loglkl)
+    void c_set_sources(double *af1, double *af2, double *af3, double *af4)
     
 def interpolation_init_all(ar[double,ndim=1] z, ar[double,ndim=1] H, ar[double,ndim=1] conf_dist, ar[double,ndim=1] D, ar[double,ndim=1] f, int size_z,
                                ar[double,ndim=1] kvec, ar[double,ndim=1] zvec, ar[double,ndim=2, mode="c"] pk, ar[double,ndim=2, mode="c"] pk_nl, int size_kvec, int size_zvec):
@@ -25,22 +26,22 @@ def set_mp_overlap(ar[double,ndim=2] ConMat, int size_ConMat, ar[int,ndim=1] int
     c_set_mp_overlap(<double*> ConMat.data, &size_ConMat, <int*> intParams.data, <double*> realParams.data, &which_sample)
     return
 
-def set_this(ar[double,ndim=2] af1, ar[double,ndim=2] af2, ar[double,ndim=2] af3, ar[double,ndim=2] af4,
-                 ar[double,ndim=2] lenslowz, ar[double,ndim=2] lens2dfloz, ar[double,ndim=2] lenscmass, ar[double,ndim=2] lens2dfhiz,
+def set_this(ar[double,ndim=2] lenslowz, ar[double,ndim=2] lens2dfloz, ar[double,ndim=2] lenscmass, ar[double,ndim=2] lens2dfhiz,
                  ar[double,ndim=1] xipm, ar[double,ndim=2] invcovxipm, int sizcov,
                  ar[double,ndim=1] ellini, ar[double,ndim=1] maskelements, int size_maskelements,
                  ar[double,ndim=1] bes0arr,  ar[double,ndim=1] bes4arr,  ar[double,ndim=1] bes2arr,
                  ar[int,ndim=1] intParams, ar[int,ndim=1] logParams):
     
-    c_set_this(<double *> af1.data, <double *> af2.data, <double *> af3.data, <double *> af4.data,
-                   <double *> lenslowz.data, <double *> lens2dfloz.data, <double *> lenscmass.data, <double *> lens2dfhiz.data,
+    c_set_this(<double *> lenslowz.data, <double *> lens2dfloz.data, <double *> lenscmass.data, <double *> lens2dfhiz.data,
                    <double *> xipm.data, <double *> invcovxipm.data, &sizcov,
                    <double *> ellini.data, <double *> maskelements.data, &size_maskelements,
                    <double *> bes0arr.data, <double *> bes4arr.data, <double *> bes2arr.data,
                    <int *> intParams.data, <int*> logParams.data)
     return
 
-    
+def set_sources(ar[double,ndim=2] af1, ar[double,ndim=2] af2, ar[double,ndim=2] af3, ar[double,ndim=2] af4):
+    c_set_sources(<double *> af1.data, <double *> af2.data, <double *> af3.data, <double *> af4.data)
+    return
     
 def loglkl_from_fortran(sigma_v_cmass=-1,b1_cmass=-1,N_shot_cmass=-1,sigv_lowz=-1, b1_lowz=-1,N_shot_lowz=-1,b1_2dfloz=-1,
                             b1_2dfhiz=-1,sigv_2dfloz=-1,sigv_2dfhiz=-1,N_shot_2dfloz=-1,N_shot_2dfhiz=-1,ampia=-1,

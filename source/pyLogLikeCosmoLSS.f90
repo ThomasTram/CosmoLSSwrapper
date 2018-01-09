@@ -50,8 +50,7 @@ contains
     end select
   end subroutine c_set_mp_overlap
 
-  subroutine c_set_this(af1, af2, af3, af4, lenslowz, lens2dfloz, lenscmass, lens2dfhiz, xipm, invcovxipm, sizcov, ellini, maskelements, size_maskelements, bes0arr,bes4arr,bes2arr, intParams, logParams) bind(c)
-     real(c_double), dimension(2,70), intent(in) :: af1,af2,af3,af4
+  subroutine c_set_this(lenslowz, lens2dfloz, lenscmass, lens2dfhiz, xipm, invcovxipm, sizcov, ellini, maskelements, size_maskelements, bes0arr,bes4arr,bes2arr, intParams, logParams) bind(c)
      real(c_double), dimension(2,29), intent(in) :: lenslowz, lens2dfloz
      real(c_double), dimension(2,28), intent(in) :: lenscmass, lens2dfhiz
      integer(c_int), intent(in) :: sizcov, size_maskelements
@@ -80,11 +79,6 @@ contains
      this%use_2dfloz_overlap = logParams(6)
      this%use_2dfhiz_overlap = logParams(7)
 
-     this%arraysjfull(:,:,1) = af1
-     this%arraysjfull(:,:,2) = af2
-     this%arraysjfull(:,:,3) = af3
-     this%arraysjfull(:,:,4) = af4
-
      this%arraysjlenslowz = lenslowz
      this%arraysjlens2dfloz = lens2dfloz
      this%arraysjlenscmass = lenscmass
@@ -109,6 +103,16 @@ contains
      end do
      this%exact_z(37) = 3.474999d0
    end subroutine c_set_this
+
+   subroutine c_set_sources(af1, af2, af3, af4) bind(c)
+     real(c_double), dimension(2,70), intent(in) :: af1,af2,af3,af4
+
+     this%arraysjfull(:,:,1) = af1
+     this%arraysjfull(:,:,2) = af2
+     this%arraysjfull(:,:,3) = af3
+     this%arraysjfull(:,:,4) = af4
+     
+   end subroutine c_set_sources
 
    subroutine c_CosmoLSS_LnLike(DataParams, loglkl) bind(c)
      real(c_double), dimension(19), intent(in) :: DataParams
