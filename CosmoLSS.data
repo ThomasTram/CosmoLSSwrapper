@@ -1,0 +1,27 @@
+# this file describes the CosmoLSS data folder
+CosmoLSS.do_nonlinear = True
+CosmoLSS.data_directory = os.path.join(data.path['data'], 'CosmoLSS')
+CosmoLSS.settings = 'CosmoLSS.dataset'
+CosmoLSS.speed = -1
+CosmoLSS.num_z = 37
+CosmoLSS.kmax = 100.0
+CosmoLSS.size_cov = 180
+
+CosmoLSS.use_nuisance = ['sigma_v_cmass','b1_cmass','N_shot_cmass','sigv_lowz', 'b1_lowz','N_shot_lowz','b1_2dfloz','b1_2dfhiz','sigv_2dfloz','sigv_2dfhiz','N_shot_2dfloz','N_shot_2dfhiz','ampia','redzia','lumia','a1phot','a2phot','a3phot','a4phot']
+
+CosmoLSS.size_covmask = 130
+CosmoLSS.klinesum = 0
+
+
+CosmoLSS.use_cmass_overlap = True
+CosmoLSS.use_lowz_overlap = True
+CosmoLSS.use_2dfloz_overlap = True
+CosmoLSS.use_2dfhiz_overlap = True
+
+
+CosmoLSS.kfit_cmass = 125
+CosmoLSS.kfit_lowz = 125
+CosmoLSS.kfit_2dfloz = 125
+CosmoLSS.kfit_2dfhiz = 125
+
+
