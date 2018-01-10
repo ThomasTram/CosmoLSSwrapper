@@ -1022,7 +1022,7 @@ module LogLikeCosmoLSS_module
 !!!    CosmoLSS_LnLike = likesj !analytic or Hartlap
 
     finish  = OMP_get_wtime()
-    print *, 'joint chisq, 2*CosmoLSS_LnLike, finish-start, finish-startrsd', chisqsj, 2.0d0*CosmoLSS_LnLike, finish-start, finish-startrsd
+    !print *, 'joint chisq, 2*CosmoLSS_LnLike, finish-start, finish-startrsd', chisqsj, 2.0d0*CosmoLSS_LnLike, finish-start, finish-startrsd
 
 
 

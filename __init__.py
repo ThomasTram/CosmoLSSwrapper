@@ -124,9 +124,9 @@ class CosmoLSS(Likelihood_sn):
             covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtpllarge7cov_kids_regcomb_blind2sj.dat',usecols=(2,))
         #!Else missing
         self.xipm = xipmtemp
-        print masktemp.shape
+        #print masktemp.shape
         self.maskelements = masktemp
-        print covxipmtemp.shape, sizcovish
+        #print covxipmtemp.shape, sizcovish
         self.covxipm = covxipmtemp.reshape(sizcovish,sizcovish)
         # Invert covariance matrix
         self.invcovxipm = la.inv(self.covxipm)
@@ -190,7 +190,7 @@ class CosmoLSS(Likelihood_sn):
 
     def update_sources(self, bootnum=0):
         # !!!Reading in source distributions according to bootnum
-        print 'Using bootstrap '+str(bootnum)
+        #print 'Using bootstrap '+str(bootnum)
         arraysjfull = []
         for nz in range(4):
             fname = self.data_directory+'/lensingrsdfiles/hendriknz/nz_z'+str(nz+1)+'_kids_boot'+str(bootnum)+'.dat' #!bootstrap DIR
@@ -236,4 +236,5 @@ class CosmoLSS(Likelihood_sn):
         nuisance = {}
         for name in self.use_nuisance:
             nuisance[name] = data.mcmc_parameters[name]['current']*data.mcmc_parameters[name]['scale']
-        return loglkl_from_fortran(**nuisance)
+        # Remember correct sign
+        return -loglkl_from_fortran(**nuisance)
