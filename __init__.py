@@ -11,7 +11,7 @@ import scipy.special
 import montepython.io_mp as io_mp
 import os
 from montepython.likelihood_class import Likelihood_sn
-from pyLogLikeCosmoLSS import interpolation_init_all, set_this, loglkl_from_fortran, set_stuff, set_mp_overlap, set_sources
+from pyLogLikeCosmoLSS import interpolation_init_all, interpolation_free_all, set_this, loglkl_from_fortran, set_stuff, set_mp_overlap, set_sources
 
 T_CMB = 2.7255     #CMB temperature
 h = 6.62606957e-34     #Planck's constant
@@ -236,5 +236,9 @@ class CosmoLSS(Likelihood_sn):
         nuisance = {}
         for name in self.use_nuisance:
             nuisance[name] = data.mcmc_parameters[name]['current']*data.mcmc_parameters[name]['scale']
+        
+        loglkl = loglkl_from_fortran(**nuisance)
+        # Free interpolation structures
+        interpolation_free_all()
         # Remember correct sign
-        return -loglkl_from_fortran(**nuisance)
+        return -loglkl

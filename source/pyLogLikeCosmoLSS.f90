@@ -1,6 +1,6 @@
 module LogLikeCosmoLSS1_interface
   use iso_c_binding, only: c_double, c_int, c_bool
-  use LogLikeCosmoLSS_module, only: Interpolation_Init_All, NonlinearPowerspectrum, this, CMB, set_mp_overlap, CPr, Curvature, CosmoLSS_LnLike
+  use LogLikeCosmoLSS_module, only: Interpolation_Init_All, Interpolation_Free_All, NonlinearPowerspectrum, this, CMB, set_mp_overlap, CPr, Curvature, CosmoLSS_LnLike
   implicit none
 contains
   subroutine c_Interpolation_Init_All(z, H, conf_dist, D, f, size_z, kvec, zvec, pk, pk_nl, size_kvec, size_zvec) bind(c)
@@ -12,6 +12,10 @@ contains
 
     call Interpolation_Init_All(z, H, conf_dist, D, f, size_z, kvec, zvec, pk, pk_nl, size_kvec, size_zvec)
   end subroutine c_Interpolation_Init_All
+
+  subroutine c_Interpolation_Free_All() bind(c)
+    call Interpolation_Free_All()
+  end subroutine c_Interpolation_Free_All
 
   subroutine c_set_stuff(CosmoParams) bind(c)
     real(c_double), intent(in), dimension(7) :: CosmoParams

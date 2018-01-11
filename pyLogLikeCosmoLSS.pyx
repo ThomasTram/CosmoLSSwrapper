@@ -4,6 +4,7 @@ import numpy as np
 
 cdef extern from "pyLogLikeCosmoLSS.h":
     void c_interpolation_init_all(double *z, double *H, double * conf_dist, double *D,  double *f, int *size_z, double *kvec, double *zvec,  double *pk, double *pk_nl, int *size_kvec, int*size_zvec)
+    void c_interpolation_free_all()
     void c_set_stuff(double *CosmoParams);
     void c_set_mp_overlap(double *ConMat, int *size_ConMat, int *intParams, double *realParams, int *which_sample);
     void c_set_this(double *lenslowz, double *lens2dfloz, double *lenscmass, double *lens2dfhiz, double *xipm, double *invcovxipm, int *sizcov, double *ellini, double *maskelements, int *size_maskelements, double *bes0arr,double *bes4arr,double *bes2arr, int *intParams, int *logParams)
@@ -14,6 +15,10 @@ def interpolation_init_all(ar[double,ndim=1] z, ar[double,ndim=1] H, ar[double,n
                                ar[double,ndim=1] kvec, ar[double,ndim=1] zvec, ar[double,ndim=2, mode="c"] pk, ar[double,ndim=2, mode="c"] pk_nl, int size_kvec, int size_zvec):
     c_interpolation_init_all(<double*> z.data, <double*> H.data, <double*> conf_dist.data,  <double*> D.data,  <double*> f.data, &size_z,
                                  <double*> kvec.data, <double*> zvec.data,  <double*> pk.data, <double*> pk_nl.data, &size_kvec, &size_zvec)
+    return
+
+def interpolation_free_all():
+    c_interpolation_free_all()
     return
 
 def set_stuff(double CPr, double H0, double h, double omdm, double omb, double omk, double K):

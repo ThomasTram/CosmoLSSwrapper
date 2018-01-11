@@ -66,6 +66,17 @@ module LogLikeCosmoLSS_module
     
   end subroutine Interpolation_Init_All
 
+  subroutine Interpolation_Free_All()
+    call SCubicSpline_Free(ConformalDistance)
+    call SCubicSpline_Free(Hubble)
+    call SCubicSpline_Free(GrowthFunction)
+    call SCubicSpline_Free(GrowthRate)
+
+    call TInterpGrid2D_Free(LinearPowerspectrum)
+    call TInterpGrid2D_Free(NonlinearPowerspectrum)
+
+  end subroutine Interpolation_Free_All
+
   subroutine set_mp_overlap(mp_overlap_ptr, ConMat, size_ConMat, intParams, realParams)
     integer, intent(in) :: size_ConMat
     real(mcp), dimension(size_ConMat,size_ConMat), intent(in) :: ConMat
