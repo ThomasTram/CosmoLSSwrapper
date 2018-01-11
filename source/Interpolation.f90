@@ -65,9 +65,11 @@
     end Type SInterpolator
 
     Type, extends(SInterpolator) :: SCubicSpline
-        integer n
-        real(sp_acc), dimension(:), pointer :: X => NULL()
-        real(sp_acc), dimension(:), pointer :: F => NULL(), ddF => NULL()
+       integer n
+       real(sp_acc), dimension(:), allocatable :: X
+       real(sp_acc), dimension(:), allocatable :: F, ddF
+   !     real(sp_acc), dimension(:), pointer :: X => NULL()
+   !     real(sp_acc), dimension(:), pointer :: F => NULL(), ddF => NULL()
     contains
     procedure :: Init => SCubicSpline_Init
     procedure :: Value => SCubicSpline_Value
@@ -449,11 +451,11 @@
     Type(SCubicSpline) :: D
 
     deallocate(D%X)
-    nullify(D%X)
+    !nullify(D%X)
     deallocate(D%F)
-    nullify(D%F)
+    !nullify(D%F)
     deallocate(D%ddF)
-    nullify(D%ddF)
+    !nullify(D%ddF)
     D%Initialized = .false.
 
     end subroutine SCubicSpline_Free
