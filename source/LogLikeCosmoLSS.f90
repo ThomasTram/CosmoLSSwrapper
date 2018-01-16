@@ -143,7 +143,7 @@ module LogLikeCosmoLSS_module
     real(mcp) AngularDiameterDistance
     real(mcp), intent(in) :: z
 
-    AngularDiameterDistance = CPr/(1d0+z)*rofChi(ComovingRadialDistance(1d0/(1d0+z)) /CPr)
+    AngularDiameterDistance = CPr/(1d0+z)*rofChi(ComovingRadialDistance(z) /CPr)
 
   end function AngularDiameterDistance
 
@@ -152,7 +152,7 @@ module LogLikeCosmoLSS_module
     real(mcp) AngularDiameterDistance2
     real(mcp), intent(in) :: z1, z2
 
-    AngularDiameterDistance2 = CPr/(1+z2)*rofChi(ComovingRadialDistance(1d0/(1d0+z2))/CPr - ComovingRadialDistance(1d0/(1d0+z1))/CPr)
+    AngularDiameterDistance2 = CPr/(1+z2)*rofChi(ComovingRadialDistance(z2)/CPr - ComovingRadialDistance(z1)/CPr)
 
   end function AngularDiameterDistance2
 
@@ -323,6 +323,10 @@ module LogLikeCosmoLSS_module
     z_lowz = this%lowz_mp_overlap%z_eff
     z_2dfloz = this%twodfloz_mp_overlap%z_eff
     z_2dfhiz = this%twodfhiz_mp_overlap%z_eff
+
+
+    !write (*,*) 'Debug zone:'
+    !write (*,*) CMB%H0, ComovingRadialDistance(0.5d0), AngularDiameterDistance(0.5d0), AngularDiameterDistance2(0.25d0, 1.75d0), MPKPowerAt(0.5d0,0.5d0), NL_MPKPowerAt(0.5d0,0.5d0)
 
     !write(*,*) 'use overlaps:',this%use_cmass_overlap,this%use_lowz_overlap,this%use_2dfloz_overlap,this%use_2dfhiz_overlap,this%twodfhiz_mp_overlap%k_num_obs,this%cmass_mp_overlap%k_num_obs,this%lowz_mp_overlap%k_num_obs,this%twodfloz_mp_overlap%k_num_obs
     !write (*,*) this%arraysjfull(1,:,1)
