@@ -71,6 +71,7 @@ class CosmoLSS(Likelihood_sn):
             'output': 'mPk',
             'non linear':'HALOFIT',
             'z_pk':'0.0, 100.0',
+            'P_k_max_h/Mpc':100.0
             }
         self.need_cosmo_arguments(data, arguments)
 
@@ -173,11 +174,11 @@ class CosmoLSS(Likelihood_sn):
             set_mp_overlap(value.ConvolutionMatrix, value.size_convolution, intParams, realParams, name_to_number[key])
             
         # Set the logk and z arrays which will de used in the power spectrum interpolation.
-        self.Nk = 200
-        self.Nz = 300
-        self.logkh_for_pk = np.linspace(-4,2,self.Nk)
+        self.Nk = 203
+        self.Nz = 38
+        self.logkh_for_pk = np.linspace(-4,2.2,self.Nk)
         self.kh_for_pk = 10**self.logkh_for_pk
-        self.z_for_pk = np.linspace(0,20,self.Nz)
+        self.z_for_pk = np.linspace(0,4.1,self.Nz)
 
         # Push some fields in the python class to the corresponding derived type in Fortran, called this:
         intParams = np.array([self.size_cov, self.size_covmask, self.klinesum, self.set_scenario, self.size_covallmask],dtype='int32')
