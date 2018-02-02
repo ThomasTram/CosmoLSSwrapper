@@ -107,8 +107,12 @@ module LogLikeCosmoLSS_module
     real(mcp), intent(in) :: k, z
     real(mcp) :: logk
     !I will assume interpolation is in log10(k) while the result is P(k), not log(P(k))
-    logk = max(log10(k),LinearPowerspectrum%x(1))
-    MPKPowerAt =LinearPowerspectrum%Value(logk,z)
+    if (k<1d-6) then
+       MPKPowerAt = 0d0
+    else
+       logk = max(log10(k),LinearPowerspectrum%x(1))
+       MPKPowerAt =LinearPowerspectrum%Value(logk,z)
+    end if
   end function MPKPowerAt
 
   function NL_MPKPowerAt(k, z)
@@ -1312,8 +1316,8 @@ module LogLikeCosmoLSS_module
 
 
 !    CALL Matrix_MulVec(this%cmass_mp_overlap%Convolution_matrix(:,:),theory_vec(:),P0P2P4_Conv(:))
-    !! TT check:
-    P0P2P4_Conv = matmul(this%cmass_mp_overlap%Convolution_matrix,theory_vec)
+    !! TT: The convolution matrix is the transposed of the one in the fortran version, so invert order of matrix multiplication.
+    P0P2P4_Conv = matmul(theory_vec,this%cmass_mp_overlap%Convolution_matrix)
 
     !write (*,*) 'MatMul worked'
     !----------------------------------------------------------------------------------------------------------
@@ -1450,8 +1454,8 @@ module LogLikeCosmoLSS_module
     theory_vec(21:30)  = P4_multipole_theory
 
 !    CALL Matrix_MulVec(this%lowz_mp_overlap%Convolution_matrix(:,:),theory_vec(:),P0P2P4_Conv(:))
-    !!TT Check:
-    P0P2P4_Conv = matmul(this%lowz_mp_overlap%Convolution_matrix,theory_vec)
+    !! TT: The convolution matrix is the transposed of the one in the fortran version, so invert order of matrix multiplication.
+    P0P2P4_Conv = matmul(theory_vec,this%lowz_mp_overlap%Convolution_matrix)
 
     !----------------------------------------------------------------------------------------------------------
     ! Stack observations into single vector P = [P0,P2,P4]
@@ -1586,8 +1590,8 @@ module LogLikeCosmoLSS_module
     theory_vec(21:30)  = P4_multipole_theory
 
 !!    CALL Matrix_MulVec(this%twodfloz_mp_overlap%Convolution_matrix(:,:),theory_vec(:),P0P2P4_Conv(:))
-    !!TT Check:
-    P0P2P4_Conv = matmul(this%twodfloz_mp_overlap%Convolution_matrix,theory_vec)
+    !! TT: The convolution matrix is the transposed of the one in the fortran version, so invert order of matrix multiplication.
+    P0P2P4_Conv = matmul(theory_vec,this%twodfloz_mp_overlap%Convolution_matrix)
     !----------------------------------------------------------------------------------------------------------
     ! Stack observations into single vector P = [P0,P2,P4]
     !----------------------------------------------------------------------------------------------------------
@@ -1720,8 +1724,8 @@ module LogLikeCosmoLSS_module
     theory_vec(21:30)  = P4_multipole_theory
 
 !!    CALL Matrix_MulVec(this%twodfhiz_mp_overlap%Convolution_matrix(:,:),theory_vec(:),P0P2P4_Conv(:))
-    !!TT Check:
-    P0P2P4_Conv = matmul(this%twodfhiz_mp_overlap%Convolution_matrix,theory_vec)
+    !! TT: The convolution matrix is the transposed of the one in the fortran version, so invert order of matrix multiplication.
+    P0P2P4_Conv = matmul(theory_vec, this%twodfhiz_mp_overlap%Convolution_matrix)
     !----------------------------------------------------------------------------------------------------------
     ! Stack observations into single vector P = [P0,P2,P4]
     !----------------------------------------------------------------------------------------------------------

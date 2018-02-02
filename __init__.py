@@ -216,7 +216,7 @@ class CosmoLSS(Likelihood_sn):
             CPr = 1.0
         else:
             CPr = 1./np.sqrt(np.abs(Omega0_k)*H0**2)
-        omcdm = cosmo.Omega0_cdm()*h*h
+        omcdm = cosmo.Omega0_cdm()
         omb = cosmo.Omega_b()
         set_stuff(CPr, H0, h, omcdm, omb, Omega0_k*h*h, np.sign(-Omega0_k))
 

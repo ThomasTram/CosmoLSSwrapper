@@ -20,6 +20,7 @@ WRAPPER = LogLikeCosmoLSS.o pyLogLikeCosmoLSS.o
 OBJ = $(addsuffix $(OUTPUT_DIR), $(UTILS) $(WRAPPER))
 
 main: libCosmoLSS.a pyLogLikeCosmoLSS.pyx pyLogLikeCosmoLSS.h
+	touch pyLogLikeCosmoLSS.c; rm pyLogLikeCosmoLSS.c
 	alias ld=$(CC);CC=$(CC) python setup.py build_ext --inplace
 
 libCosmoLSS.a: $(UTILS) $(WRAPPER)
