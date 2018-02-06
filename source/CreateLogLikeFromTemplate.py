@@ -1,27 +1,5 @@
-
-# coding: utf-8
-
-# In[1]:
-
-import numpy as np
 import shutil
-
-
-# In[2]:
-
-outpath = '/Users/au192734/Projects/montepython_CosmoLSS/montepython/likelihoods/CosmoLSS/'
-inpath = '/Users/au192734/Downloads/cosmolss_onlyupdatedfiles/'
-
-
-# In[ ]:
-
-
-    
-
-
-# In[15]:
-
-with open(inpath+'source/CosmoLSS.f90') as fid:
+with open('CosmoLSS.f90') as fid:
     all_lines = fid.readlines()
     
 comments = [r'TCosmoTheoryPredictions',r'obj%theoryomp = Theory',r'obj%exact_z_index = this%exact_z_index',
@@ -54,6 +32,9 @@ for i, line in enumerate(all_lines):
         all_lines[i] = r'!'+line
         firstCMBparam = False
         continue
+
+    if 'Main likelihood calculation' in line:
+        index = i-1
     
     iscomment = False
     for substring in comments:
@@ -67,15 +48,10 @@ for i, line in enumerate(all_lines):
             line = line.replace(key,val)
         all_lines[i] = line
 
+shutil.copy('LogLikeTemplate.f90','LogLikeCosmoLSS.f90')
 
-# In[16]:
+for index in range(len(all_lines)):
+    
 
-shutil.copy(outpath+'source/LogLikeTemplate.f90',outpath+'source/LogLikeCosmoLSS.f90')
-with open(outpath+'source/LogLikeCosmoLSS.f90','a') as fid:
-    fid.writelines(all_lines[701:])
-
-
-# In[ ]:
-
-
-
+with open('LogLikeCosmoLSS.f90','a') as fid:
+    fid.writelines(all_lines[index:])
