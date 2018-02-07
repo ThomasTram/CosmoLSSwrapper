@@ -12,9 +12,11 @@ ext_modules = [Extension(# module name:
                          # other compile args for gcc
                          include_dirs=[get_include()],
                          extra_compile_args=['-fPIC', '-O3', '-lgfortran','-lquadmath'],
-                        library_dirs = [".","/usr/local/Cellar/gcc/6.3.0_1/lib/gcc/6"],
+                        #library_dirs = [".","/usr/local/Cellar/gcc/6.3.0_1/lib/gcc/6"],
+                        library_dirs = ["."],
                          # other files to link to
-                         extra_link_args=['libCosmoLSS.a','-L/usr/local/Cellar/gcc/6.3.0_1/lib/gcc/6',
+                         extra_link_args=['libCosmoLSS.a',
+                                              #'-L/usr/local/Cellar/gcc/6.3.0_1/lib/gcc/6',
                                               '-lgomp','-lgfortran','-lquadmath',
                                               ])]
 
