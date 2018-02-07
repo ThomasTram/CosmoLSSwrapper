@@ -50,8 +50,6 @@ for i, line in enumerate(all_lines):
 
 shutil.copy('LogLikeTemplate.f90','LogLikeCosmoLSS.f90')
 
-for index in range(len(all_lines)):
-    
 
 with open('LogLikeCosmoLSS.f90','a') as fid:
     fid.writelines(all_lines[index:])
