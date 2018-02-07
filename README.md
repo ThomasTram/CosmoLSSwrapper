@@ -21,8 +21,9 @@ distances.
 CosmoMC class ````TCosmoTheoryPredictions```` like the matter power
 spectrum.
 
-Item 1 is handled by using part of Antony Lewis [forutils] (https://github.com/cmbant/forutils)
-package, which is a subset of CosmoMC for general purpose.
+Item 1 is handled by using part of Antony Lewis ````forutils````
+package (https://github.com/cmbant/forutils), which is a subset of
+CosmoMC for general purpose.
 Item 2 and 3 are taken care of by creating Fortran interpolation
 objects of all the relevant data from CLASS.
 
@@ -30,7 +31,7 @@ The cosmological parameters in CosmoMC are stored in the class
 ````CMBParams````, which in this implementation became a derived type
 which must be updated every time the Python likelihood is called.
 
-In the future, if all likelihoods restricted themselves to using only
+In the future, if all CosmoMC likelihoods restricted themselves to using only
 the two classes ````CMBParams```` and
 ````TCosmoTheoryPredictions````, it might be worth wrapping these two
 classes in a more complete way.
