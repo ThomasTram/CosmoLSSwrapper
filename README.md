@@ -21,7 +21,7 @@ distances.
 CosmoMC class ````TCosmoTheoryPredictions```` like the matter power
 spectrum.
 
-Item 1 is handled by using part of Antony Lewis ````forutils````
+Item 1 is handled by using part of Antony Lewis [forutils] (https://github.com/cmbant/forutils)
 package, which is a subset of CosmoMC for general purpose.
 Item 2 and 3 are taken care of by creating Fortran interpolation
 objects of all the relevant data from CLASS.
