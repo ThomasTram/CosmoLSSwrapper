@@ -1,8 +1,6 @@
 
-#FC = gfortran
-
-FC = gcc
-CC = gcc
+FC ?= gcc
+CC ?= gcc
 
 FFLAGS = -cpp -O3 -ffast-math -ffree-line-length-none -fopenmp -fmax-errors=10 -fPIC
 LNK =
