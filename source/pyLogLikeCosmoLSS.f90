@@ -64,7 +64,7 @@ contains
      real(c_double), dimension(size_maskelements), intent(in) :: maskelements
      real(c_double), dimension(9,58999), intent(in) :: bes0arr,bes4arr,bes2arr
      integer(c_int), dimension(5), intent(in) :: intParams
-     integer(c_int), dimension(7), intent(in) :: logParams
+     integer(c_int), dimension(13), intent(in) :: logParams
      integer :: zinit
      
      this%sizcov = sizcov

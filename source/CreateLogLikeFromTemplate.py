@@ -44,7 +44,7 @@ for i, line in enumerate(all_lines):
     if iscomment:
         all_lines[i] = r'!'+line
     else:
-        for key, val in substitutions.iteritems():
+        for key, val in substitutions.items():
             line = line.replace(key,val)
         all_lines[i] = line
 

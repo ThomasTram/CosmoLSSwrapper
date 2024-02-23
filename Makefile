@@ -11,7 +11,7 @@ vpath %.f90 source
 vpath %.o source
 
 
-UTILS = MiscUtils.o StringUtils.o MpiUtils.o FileUtils.o ObjectLists.o Interpolation.o Romberg.o
+UTILS = MiscUtils.o MpiUtils.o StringUtils.o FileUtils.o ObjectLists.o Interpolation.o Romberg.o
 
 WRAPPER = LogLikeCosmoLSS.o pyLogLikeCosmoLSS.o
 

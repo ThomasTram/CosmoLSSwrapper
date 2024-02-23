@@ -183,7 +183,8 @@ class CosmoLSS(Likelihood_sn):
         # Push some fields in the python class to the corresponding derived type in Fortran, called this:
         intParams = np.array([self.size_cov, self.size_covmask, self.klinesum, self.set_scenario, self.size_covallmask],dtype='int32')
         logParams = np.array([self.use_morell, self.use_rombint, self.use_conservative,
-                                  self.use_cmass_overlap, self.use_lowz_overlap, self.use_2dfloz_overlap, self.use_2dfhiz_overlap],dtype='int32')
+                                  self.use_cmass_overlap, self.use_lowz_overlap, self.use_2dfloz_overlap, self.use_2dfhiz_overlap,
+                                  self.use_analyticcov, self.use_largescales, self.use_bootstrapnz, self.write_theoryfiles, self.use_accuracyboost, self.print_timelike],dtype='int32')
 
         set_this(self.lens_redshifts['lowz'], self.lens_redshifts['2dfloz'], self.lens_redshifts['cmass'],self.lens_redshifts['2dfhiz'],
                      self.xipm, self.invcovxipm, self.sizcov, self.ellgentestarrini, self.maskelements, len(self.maskelements),

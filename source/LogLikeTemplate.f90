@@ -29,7 +29,7 @@ module LogLikeCosmoLSS_module
      real(mcp), allocatable,dimension(:) :: maskelements
      real(mcp), dimension(9,58999) :: bes0arr,bes4arr,bes2arr
      integer :: size_cov,size_covmask,sizcov,sizcovpremask,klinesum,set_scenario,size_covallmask
-     logical :: use_morell, use_rombint, use_conservative
+     logical :: use_morell, use_rombint, use_conservative, use_analyticcov, use_largescales, use_bootstrapnz, write_theoryfiles, use_accuracyboost, print_timelike
      type(myMultipoleOverlaps) :: cmass_mp_overlap, lowz_mp_overlap, twodfloz_mp_overlap, twodfhiz_mp_overlap
      logical :: use_cmass_overlap, use_lowz_overlap, use_2dfloz_overlap, use_2dfhiz_overlap
      real(mcp), allocatable, dimension(:) :: exact_z
