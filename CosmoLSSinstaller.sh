@@ -33,4 +33,4 @@ cd "$LIKEDIR/source"
 #rm -rf $WORKDINGDIR
 python CreateLogLikeFromTemplate.py
 cd ..
-CC=gcc FC=gcc make
+make -j
