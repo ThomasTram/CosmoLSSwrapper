@@ -21,6 +21,19 @@ main: libCosmoLSS.a pyLogLikeCosmoLSS.pyx pyLogLikeCosmoLSS.h
 	touch pyLogLikeCosmoLSS.c; rm pyLogLikeCosmoLSS.c
 	alias ld=$(CC);CC=$(CC) python setup.py build_ext --inplace
 
+
+LogLikeCosmoLSS.o: Interpolation.o
+
+pyLogLikeCosmoLSS.o: LogLikeCosmoLSS.o
+
+StringUtils.o: MiscUtils.o MpiUtils.o
+
+FileUtils.o: StringUtils.o MiscUtils.o MpiUtils.o
+
+ObjectLists.o: FileUtils.o MpiUtils.o
+
+Interpolation.o: FileUtils.o MpiUtils.o MiscUtils.o StringUtils.o ObjectLists.o
+
 libCosmoLSS.a: $(UTILS) $(WRAPPER)
 	cd $(OUTPUT_DIR); ar rvs ../libCosmoLSS.a $(UTILS) $(WRAPPER)
 
