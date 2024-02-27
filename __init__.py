@@ -11,7 +11,7 @@ import scipy.special
 import montepython.io_mp as io_mp
 import os
 from montepython.likelihood_class import Likelihood_sn
-from pyLogLikeCosmoLSS import interpolation_init_all, interpolation_free_all, set_this, loglkl_from_fortran, set_stuff, set_mp_overlap, set_sources
+from .pyLogLikeCosmoLSS import interpolation_init_all, interpolation_free_all, set_this, loglkl_from_fortran, set_stuff, set_mp_overlap, set_sources
 
 T_CMB = 2.7255     #CMB temperature
 h = 6.62606957e-34     #Planck's constant
@@ -156,7 +156,7 @@ class CosmoLSS(Likelihood_sn):
         
         # Read convolution matrix for the used overlaps from files and push to Fortran
         name_to_number = {'cmass':1,'lowz':2,'2dfloz':3,'2dfhiz':4}
-        for key, value in self.mp_overlaps.iteritems():
+        for key, value in self.mp_overlaps.items():
             if key=='lowz':
                 fname_from_dataset = self.LOWZ_overlap_conv
             elif key=='cmass':
