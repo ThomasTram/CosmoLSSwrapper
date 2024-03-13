@@ -2,6 +2,8 @@ extern void c_interpolation_init_all(double *z, double *H, double *conf_dist, do
 extern void c_interpolation_free_all();
 extern void c_set_stuff(double *CosmoParams);
 extern void c_set_mp_overlap(double *ConMat, int *size_ConMat, int *intParams, double *realParams, int *which_sample);
-extern void c_set_this(double *lenslowz, double *lens2dfloz, double *lenscmass, double *lens2dfhiz, double *xipm, double *invcovxipm, int *sizcov, double *ellini, double *maskelements, int *size_maskelements, double *bes0arr,double *bes4arr,double *bes2arr, int *intParams, int* logParams);
+extern void c_set_this(double *lenslowz, double *lens2dfloz, double *lenscmass, double *lens2dfhiz, double *xipm, double *invcovxipm, int *sizcov, double*, double*, int*, double *ellini, double *maskelements, int *size_maskelements, double *bes0arr,double *bes4arr,double *bes2arr, int *intParams, int* logParams);
 extern void c_cosmolss_lnlike(double *dataparams, double *loglkl);
-extern void c_set_sources(double *af1, double *af2, double *af3, double *af4);
+extern void c_set_sources(double *sources, int* dim1, int* dim2, int* dim3);
+extern void c_test_array(double *source_data, int* dim1, int* dim2, int* dim3);
+extern void c_test_array2(double *source_data);

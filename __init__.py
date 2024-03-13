@@ -5,6 +5,7 @@
 .. moduleauthor:: Thomas Tram <thomas.tram@aias.au.dk>
 Last updated December 20, 2017. Based on the CosmoMC module.
 """
+import math
 import numpy as np
 import scipy.linalg as la
 import scipy.special
@@ -75,25 +76,27 @@ class CosmoLSS(Likelihood_sn):
             }
         self.need_cosmo_arguments(data, arguments)
 
-        if (self.set_scenario == 3) and not self.use_conservative:
-            self.size_covallmask = 210 #!postmask, fiducial
-        else:
-            self.size_covallmask = 186 #!postmask, conservative
-        
-        if (self.set_scenario == 1): #!fiducial KiDS masking
-            sizcovishpremask = 180 #!pre-masking
-            sizcovish = self.size_covmask #!post-masking
-        elif ((self.set_scenario == 3) and not self.use_conservative):
-            sizcovishpremask = 340 #!pre-masking
-            sizcovish = self.size_covallmask #!post-masking
-        elif ((self.set_scenario == 3) and self.use_conservative):
-            sizcovishpremask = 332 #!pre-masking
-            sizcovish = self.size_covallmask #!post-masking
-        #What if scenario is not 1 or 3?
+        # All this info should be inferred from the data files
+        if False:
+            if (self.set_scenario == 3) and not self.use_conservative:
+                self.size_covallmask = 210 #!postmask, fiducial
+            else:
+                self.size_covallmask = 186 #!postmask, conservative
+            
+            if (self.set_scenario == 1): #!fiducial KiDS masking
+                sizcovishpremask = 180 #!pre-masking
+                sizcovish = self.size_covmask #!post-masking
+            elif ((self.set_scenario == 3) and not self.use_conservative):
+                sizcovishpremask = 340 #!pre-masking
+                sizcovish = self.size_covallmask #!post-masking
+            elif ((self.set_scenario == 3) and self.use_conservative):
+                sizcovishpremask = 332 #!pre-masking
+                sizcovish = self.size_covallmask #!post-masking
+            #What if scenario is not 1 or 3?
 
-        sizcovishsq = sizcovish**2
-        self.sizcov = sizcovish
-        self.sizcovpremask = sizcovishpremask
+            sizcovishsq = sizcovish**2
+            self.sizcov = sizcovish
+            self.sizcovpremask = sizcovishpremask
 
         # !!!!!Lens redshifts!!!!!!!
         self.lens_redshifts = {}
@@ -111,24 +114,76 @@ class CosmoLSS(Likelihood_sn):
 
 
         #!!!Reading in measurements and masks and covariances
-        if (self.set_scenario == 1):
-            xipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmcut_kids_regcomb_blind2_swinburnesj.dat',usecols=(1,))
-            masktemp =  np.loadtxt(self.data_directory+'/lensingrsdfiles/xipm_kids4tom_selectsj.dat',usecols=(1,))
-            covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmcutcov_kids_regcomb_blind2_swinburnesj.dat',usecols=(2,))
-        elif (self.set_scenario == 3 and not self.use_conservative):
-            xipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtpllarge4_kids_regcomb_blind2sj.dat',usecols=(1,))
-            masktemp =  np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtpllarge4_kids4tom_selectsj.dat',usecols=(1,))
-            covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtpllarge4cov_kids_regcomb_blind2sj.dat',usecols=(2,))
-        elif (self.set_scenario == 3 and self.use_conservative):
-            xipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtpllarge7_kids_regcomb_blind2sj.dat',usecols=(1,))
-            masktemp =  np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtpllarge7_kids4tom_selectsj.dat',usecols=(1,))
-            covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtpllarge7cov_kids_regcomb_blind2sj.dat',usecols=(2,))
+        if self.set_scenario == 1:
+            if self.use_analyticcov:
+                if self.use_large_scales:
+                    xipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmcut_kids_blind1_planckcut.dat',usecols=(1,))
+                    covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmcutcov_kids_analytic_inc_m_blind1_planckcut.dat',usecols=(2,))
+                else:
+                    xipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmcut_kids_blind1.dat',usecols=(1,))
+                    covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmcutcov_kids_analytic_inc_m_blind1.dat',usecols=(2,))
+            else:
+                xipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmcut_kids_regcomb_blind2_swinburnesj.dat',usecols=(1,))
+                covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmcutcov_kids_regcomb_blind2_swinburnesj.dat',usecols=(2,))
+            if self.use_large_scales:
+                masktemp =  np.loadtxt(self.data_directory+'/lensingrsdfiles/xipm_kids4tom_selectsj_planckcut.dat',usecols=(1,))
+            else:
+                masktemp =  np.loadtxt(self.data_directory+'/lensingrsdfiles/xipm_kids4tom_selectsj.dat',usecols=(1,))
+        elif self.set_scenario == 2:
+            if self.use_conservative:
+                xipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtlarge3_kids_regcomb_blind2sj.dat',usecols=(1,))
+                masktemp =  np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtlarge3_kids4tom_selectsj.dat',usecols=(1,))
+                covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtlarge3cov_kids_regcomb_blind2sj.dat',usecols=(2,))
+            else:
+                xipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtlarge4_kids_regcomb_blind2sj.dat',usecols=(1,))
+                masktemp =  np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtlarge4_kids4tom_selectsj.dat',usecols=(1,))
+                covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtlarge4cov_kids_regcomb_blind2sj.dat',usecols=(2,))
+        elif self.set_scenario == 3:
+            if self.use_conservative:
+                xipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtlarge7_kids_regcomb_blind2sj.dat',usecols=(1,))
+                masktemp =  np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtlarge7_kids4tom_selectsj.dat',usecols=(1,))
+                covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtlarge7cov_kids_regcomb_blind2sj.dat',usecols=(2,))
+            else:
+                xipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtlarge4_kids_regcomb_blind2sj.dat',usecols=(1,))
+                masktemp =  np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtlarge4_kids4tom_selectsj.dat',usecols=(1,))
+                covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/xipmgtlarge4cov_kids_regcomb_blind2sj.dat',usecols=(2,))
+        elif self.set_scenario == -2:
+            xipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/kv450datanew.dat')
+            masktemp =  np.loadtxt(self.data_directory+'/lensingrsdfiles/xipm_kids5tom_selectsj.dat',usecols=(1,))
+            covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/thps_cov_aug13_blindB_list_nospaces.dat',usecols=(2,))                
+        elif (self.set_scenario == -3) :
+            xipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/kids1000xipm_desformat.dat')
+            if self.use_cholesky:
+                self.somdzcholesky = np.loadtxt(self.data_directory+'/lensingrsdfiles/kids1000_SOM_cov_multiplied_cholesky.dat')
+            masktemp =  np.loadtxt(self.data_directory+'/lensingrsdfiles/kids1000maskxipm.dat',usecols=(1,))
+            covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/kids1000cov_xipmsubspace.dat',usecols=(2,))
+
         #!Else missing
+        if (self.set_scenario == -2 or self.set_scenario == -3):
+            if self.set_scenario == -2:
+                multarr_values = [-0.0128, -0.0104, -0.0114, 0.0072, 0.0061]
+            elif self.set_scenario == -3:
+                multarr_values = [-0.009, -0.011, -0.015, 0.002, 0.007]
+                somdzmean_values = [0, -0.002, -0.013, -0.011, 0.006]
+
+            # Construct division factors
+            division_factors = [(1.0 + multarr_values[i]) / (1.0 + multarr_values[j]) for i in range(5) for j in range(i+1)]
+
+            # Apply division factors to xipmtemp4ss
+            for i in range(15):
+                xipmtemp[18*i:18*(i + 1)] /= division_factors[i]
+
+
+        #Store sizes:
+        self.sizcov = math.isqrt(covxipmtemp.shape[0])
+        self.sizcovpremask = masktemp.shape[0]
+
+
         self.xipm = xipmtemp
         #print masktemp.shape
         self.maskelements = masktemp
         #print covxipmtemp.shape, sizcovish
-        self.covxipm = covxipmtemp.reshape(sizcovish,sizcovish)
+        self.covxipm = covxipmtemp.reshape(self.sizcov, self.sizcov)
         # Invert covariance matrix
         self.invcovxipm = la.inv(self.covxipm)
 
@@ -136,6 +191,24 @@ class CosmoLSS(Likelihood_sn):
         self.thetacfhtini = np.array([0.71336, 1.45210, 2.95582, 6.01675, 12.24745, 24.93039, 50.74726, 103.29898, 210.27107])/60.0 #!athena angular scales (deg) --- 9 ang bins
         self.thetaradcfhtini = self.thetacfhtini*np.pi/180.0 #!converted to rad
         self.ellgentestarrini = np.array(range(2,59001),dtype='float64')
+
+        #!Generate array containing l-values where C(l) is evaluated
+        if self.use_morell:
+            self.nellbins = 101
+            morellfac = 0.1
+        else:
+            self.nellbins = 31
+            morellfac = 0.5
+        self.ellarr = np.zeros(self.nellbins)
+        self.prefacarrz = np.zeros(self.nellbins)
+        for ellgenini in range(1, self.nellbins + 1):
+            if ellgenini < 10:
+                self.ellarr[ellgenini - 1] = ellgenini + 1
+            elif ellgenini > 10 or ellgenini == 10:
+                self.ellarr[ellgenini - 1] = self.ellarr[ellgenini - 2] + morellfac*self.ellarr[ellgenini - 2]
+
+        self.ellarr = self.ellarr.astype(int)
+        self.prefacarrz = ((self.ellarr + 2.0) * (self.ellarr + 1.0) * self.ellarr * (self.ellarr - 1.0)) ** 0.5 / (self.ellarr + 0.5) ** 2.0
 
         #!compute Bessel functions
         # I want a column order Fortran contiguous memory block of the form (iii, jjj), so most convenient to form the argument first.
@@ -148,7 +221,7 @@ class CosmoLSS(Likelihood_sn):
         # Initialise multipole overlaps
         # Default settings for MultipoleOverlap Class, can be overwritten at initialisation:
         # k_min_theory=0.0, dk_theory=0.05, z_eff=0.57, size_convolution=30, k_num_conv=10,k_spacing_obs=0.05,k_min_obs=0.075,k_0175 = False, fit_k_0125 = False,fit_k_0075 = False
-        CosmoLSS.mp_overlaps = {'cmass':self.MultipoleOverlap(k_fit=self.kfit_cmass),
+        CosmoLSS.mp_overlaps = {'cmass':self.MultipoleOverlap(z_eff=0.57, k_fit=self.kfit_cmass),
                                     'lowz': self.MultipoleOverlap(z_eff=0.32,k_fit=self.kfit_lowz),
                                     '2dfloz': self.MultipoleOverlap(z_eff=0.31,k_fit=self.kfit_2dfloz),
                                     '2dfhiz':self.MultipoleOverlap(z_eff=0.56,k_fit=self.kfit_2dfhiz)}
@@ -181,25 +254,60 @@ class CosmoLSS(Likelihood_sn):
         self.z_for_pk = np.linspace(0,4.1,self.Nz)
 
         # Push some fields in the python class to the corresponding derived type in Fortran, called this:
-        intParams = np.array([self.size_cov, self.size_covmask, self.klinesum, self.set_scenario, self.size_covallmask],dtype='int32')
+        intParams = np.array([self.size_cov, self.sizcov, self.klinesum, self.set_scenario, self.size_covallmask],dtype='int32')
         logParams = np.array([self.use_morell, self.use_rombint, self.use_conservative,
                                   self.use_cmass_overlap, self.use_lowz_overlap, self.use_2dfloz_overlap, self.use_2dfhiz_overlap,
-                                  self.use_analyticcov, self.use_largescales, self.use_bootstrapnz, self.write_theoryfiles, self.use_accuracyboost, self.print_timelike],dtype='int32')
+                                  self.use_analyticcov, self.use_largescales, self.use_bootstrapnz, self.write_theoryfiles, self.use_accuracyboost, 
+                                  self.print_timelike, self.use_cholesky, self.print_parameters],dtype='int32')
 
         set_this(self.lens_redshifts['lowz'], self.lens_redshifts['2dfloz'], self.lens_redshifts['cmass'],self.lens_redshifts['2dfhiz'],
-                     self.xipm, self.invcovxipm, self.sizcov, self.ellgentestarrini, self.maskelements, len(self.maskelements),
+                     self.xipm, self.invcovxipm, self.sizcov, self.ellarr, self.prefacarrz, self.nellbins, 
+                     self.ellgentestarrini, self.maskelements, len(self.maskelements),
                      self.bes0arr, self.bes4arr, self.bes2arr, intParams, logParams)
+        
+        # Set the sources in the Fortran module
+        self.update_sources()
 
     def update_sources(self, bootnum=0):
-        # !!!Reading in source distributions according to bootnum
-        #print 'Using bootstrap '+str(bootnum)
-        arraysjfull = []
-        for nz in range(4):
-            fname = self.data_directory+'/lensingrsdfiles/hendriknz/nz_z'+str(nz+1)+'_kids_boot'+str(bootnum)+'.dat' #!bootstrap DIR
-            tmp = np.loadtxt(fname)
-            tmp[:,1] /= (np.sum(tmp[:,1])*0.05)
-            arraysjfull.append(tmp)
-        set_sources(arraysjfull[0],arraysjfull[1],arraysjfull[2],arraysjfull[3])
+        data_list = []
+        if self.use_bootstrapnz and self.setscenario >= 0:
+            for i in range(1, 5):
+                filename = f'data/lensingrsdfiles/nz_z{i}_kids_binned_hendrik.dat'
+                data = np.loadtxt(filename)
+                data_list.append(data)
+        elif not self.use_bootstrapnz and self.setscenario >= 0:
+            for i in range(1, 5):
+                filename = f'data/lensingrsdfiles/nz_z{i}_kids_binned.dat'
+                data = np.loadtxt(filename)
+                data_list.append(data)
+        elif self.setscenario == -2:
+            for i in range(1, 6):
+                filename = f'data/lensingrsdfiles/nz_z{i}_kv450_meannew_blindb.dat'
+                data = np.loadtxt(filename)
+                data_list.append(data)
+        elif self.setscenario == -3:
+            for i in range(1, 6):
+                filename = f'data/lensingrsdfiles/kids1000nz{i}.dat'
+                data = np.loadtxt(filename)
+                data_list.append(data)
+        
+        # Concatenate data from list of arrays
+        concatenated_data = np.array(data_list)
+        
+        # Normalize concatenated data
+        concatenated_data /= (np.sum(concatenated_data, axis=1, keepdims=True) * 0.05)
+
+        set_sources(concatenated_data)
+        if False:
+            # !!!Reading in source distributions according to bootnum
+            #print 'Using bootstrap '+str(bootnum)
+            arraysjfull = []
+            for nz in range(4):
+                fname = self.data_directory+'/lensingrsdfiles/hendriknz/nz_z'+str(nz+1)+'_kids_boot'+str(bootnum)+'.dat' #!bootstrap DIR
+                tmp = np.loadtxt(fname)
+                tmp[:,1] /= (np.sum(tmp[:,1])*0.05)
+                arraysjfull.append(tmp)
+            set_sources(arraysjfull[0],arraysjfull[1],arraysjfull[2],arraysjfull[3])
         
     def loglkl(self, cosmo, data):
         """
@@ -232,7 +340,8 @@ class CosmoLSS(Likelihood_sn):
                                    self.logkh_for_pk, self.z_for_pk, pk_l, pk_nl, self.Nk, self.Nz)
 
         # Update bootstrap sources with integer corresponding to bootstrap realisation 0-999
-        self.update_sources(np.random.randint(0,999))
+        # Update: I think we are no longer using bootstraps, so we will set the sources in the _init_ method
+        #self.update_sources(np.random.randint(0,999))
        
         #Finally, recover nuisance parameters and call the Fortran likelihood:
         nuisance = {}

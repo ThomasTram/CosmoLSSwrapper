@@ -24,6 +24,7 @@ substitutions = {r'Theory%MPK%ny':r'NonlinearPowerspectrum%ny',
                  r'== .':r'.eqv. .',
                  r'CMB%h0/100':r'CMB%h0/100d0',
                  r'real(mcp) :: DataParams(:)':'real(mcp), intent(in) :: DataParams(19) \n real(mcp), parameter :: c = 2.99792458d8',
+                 r'Type(CosmoLSSLikelihood)':r'Type(this_type)',
                 }
 
 firstCMBparam = True

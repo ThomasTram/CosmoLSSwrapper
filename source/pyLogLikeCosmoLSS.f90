@@ -54,19 +54,21 @@ contains
     end select
   end subroutine c_set_mp_overlap
 
-  subroutine c_set_this(lenslowz, lens2dfloz, lenscmass, lens2dfhiz, xipm, invcovxipm, sizcov, ellini, maskelements, size_maskelements, bes0arr,bes4arr,bes2arr, intParams, logParamsInt) bind(c)
+  subroutine c_set_this(lenslowz, lens2dfloz, lenscmass, lens2dfhiz, xipm, invcovxipm, sizcov, ellarr, prefacarrz, size_ellarr, ellini, maskelements, size_maskelements, bes0arr,bes4arr,bes2arr, intParams, logParamsInt) bind(c)
      real(c_double), dimension(2,29), intent(in) :: lenslowz, lens2dfloz
      real(c_double), dimension(2,28), intent(in) :: lenscmass, lens2dfhiz
-     integer(c_int32_t), intent(in) :: sizcov, size_maskelements
+     integer(c_int32_t), intent(in) :: sizcov, size_maskelements, size_ellarr
      real(c_double), dimension(sizcov), intent(in) :: xipm
+     real(c_double), dimension(size_ellarr), intent(in) :: ellarr, prefacarrz
      real(c_double), dimension(sizcov,sizcov), intent(in) :: invcovxipm 
      real(c_double), dimension(58999), intent(in) :: ellini
      real(c_double), dimension(size_maskelements), intent(in) :: maskelements
      real(c_double), dimension(9,58999), intent(in) :: bes0arr,bes4arr,bes2arr
      integer(c_int32_t), dimension(5), intent(in) :: intParams
-     integer(c_int32_t), dimension(13), intent(in) :: logParamsInt
-     logical, dimension(13) :: logParams
-     integer :: zinit
+     integer, parameter :: N_logParams = 15
+     integer(c_int32_t), dimension(N_logParams), intent(in) :: logParamsInt
+     logical, dimension(N_logParams) :: logParams
+     integer :: zinit, zim, setscenario
      
      this%sizcov = sizcov
      this%sizcovpremask = size_maskelements
@@ -91,6 +93,8 @@ contains
      this%write_theoryfiles = logParams(11)
      this%use_accuracyboost = logParams(12)
      this%print_timelike = logParams(13)
+     this%use_cholesky = logParams(14)
+     this%print_parameters = logParams(15)
 
      this%arraysjlenslowz = lenslowz
      this%arraysjlens2dfloz = lens2dfloz
@@ -99,6 +103,9 @@ contains
 
      this%xipm = xipm
      this%invcovxipm = invcovxipm
+     this%ellarr = ellarr
+     this%prefacarrz = prefacarrz
+     this%nellbins = size_ellarr
      this%ellgentestarrini = ellini
      this%maskelements = maskelements
 
@@ -106,25 +113,55 @@ contains
      this%bes4arr = bes4arr
      this%bes2arr = bes2arr
      
-     this%num_z = 370
-     allocate(this%exact_z(this%num_z)) !allocate array for matter power spectrum redshifts
-     !assign redshifts for matter power spectrum
-     this%exact_z(1) = 0.0d0
-     this%exact_z(2) = 0.0025d0
-     do zinit=3,370
-      this%exact_z(zinit) = this%exact_z(zinit-1) + 0.0198d0*this%exact_z(zinit-1)
-     end do
-     this%exact_z(370) = 3.474999d0
+     setscenario = this%set_scenario
+     if(setscenario >= 0) then
+       do zinit=3,this%wtrapmax
+         this%exact_z(zinit) = this%exact_z(zinit-1) + 0.0198d0*this%exact_z(zinit-1)
+      end do
+      this%exact_z(this%wtrapmax) = 3.474999d0
+      else if(setscenario == -2) then
+      do zinit=3,this%wtrapmax
+          this%exact_z(zinit) = this%exact_z(zinit-1) + 0.021d0*this%exact_z(zinit-1)
+      end do
+      this%exact_z(this%wtrapmax) = 5.724999d0
+      else if(setscenario == -3) then
+         do zinit=3,this%wtrapmax
+          this%exact_z(zinit) = this%exact_z(zinit-1) + 0.021d0*this%exact_z(zinit-1)
+         end do
+         this%exact_z(this%wtrapmax) = 5.674999d0
+      end if
+
+      !!!trapezoid z-steps for lowz
+      this%wtrapmaxlens = 170 !assuming wtrapmaxlens < wtrapmax
+      !allocate(this%exact_zlenslowz(this%wtrapmaxlens))
+      this%exact_zlenslowz(1) = 0.0d0
+      this%exact_zlenslowz(2) = 0.15d0
+      do zim=3,this%wtrapmaxlens
+         this%exact_zlenslowz(zim) = 0.15d0 + (0.43d0-0.15d0)/168.0d0*(zim-2)
+      end do
+      this%exact_zlenslowz(this%wtrapmaxlens) = 0.43d0 !0.429999d0
+
+      !!!trapezoid z-steps for cmass
+      !allocate(this%exact_zlenscmass(this%wtrapmaxlens))
+      this%exact_zlenscmass(1) = 0.0d0
+      this%exact_zlenscmass(2) = 0.43d0
+      do zim=3,this%wtrapmaxlens
+         this%exact_zlenscmass(zim) = 0.43 + (0.7d0-0.43d0)/168.0d0*(zim-2)
+      end do
+      this%exact_zlenscmass(this%wtrapmaxlens) = 0.7d0 !0.699999d0
+
    end subroutine c_set_this
 
-   subroutine c_set_sources(af1, af2, af3, af4) bind(c)
-     real(c_double), dimension(2,70), intent(in) :: af1,af2,af3,af4
-
-     this%arraysjfull(:,:,1) = af1
-     this%arraysjfull(:,:,2) = af2
-     this%arraysjfull(:,:,3) = af3
-     this%arraysjfull(:,:,4) = af4
-     
+   subroutine c_set_sources(sources_for_scenario, dim1, dim2, dim3) bind(c)
+      integer(c_int32_t), intent(in) :: dim1, dim2, dim3
+      real(c_double), dimension(dim1, dim2, dim3), intent(in) :: sources_for_scenario
+      if (this%set_scenario >= 0) then
+         this%arraysjfull4bins = sources_for_scenario
+      else if (this%set_scenario == -2) then
+         this%arraysjfullkv450 = sources_for_scenario
+      else if (this%set_scenario == -3) then
+         this%arraysjfull = sources_for_scenario
+      end if
    end subroutine c_set_sources
 
    subroutine c_CosmoLSS_LnLike(DataParams, loglkl) bind(c)
@@ -132,5 +169,33 @@ contains
      real(c_double), intent(out) :: loglkl
      loglkl = CosmoLSS_LnLike(DataParams)
    end subroutine c_CosmoLSS_LnLike
+
+   subroutine c_test_array(array, dim1, dim2, dim3) bind(c)
+     integer(c_int32_t), intent(in) :: dim1, dim2, dim3
+     real(c_double), dimension(dim1, dim2, dim3), intent(in) :: array
+     real(c_double), dimension(3, 7, 13) :: fixed_array
+     integer :: i, j, k
+     fixed_array = array
+      do k=1,13
+        do j=1,7
+           do i=1,3
+              write (*,*) "Element ", i, j, k, " of array: ", fixed_array(i, j, k)
+           end do
+        end do
+     end do
+   end subroutine c_test_array
   
+   subroutine c_test_array2(array) bind(c)
+      real(c_double), dimension(3, 7, 13), intent(in) :: array
+      real(c_double), dimension(3, 7, 13) :: fixed_array
+      integer :: i, j, k
+      fixed_array = array
+       do k=1,13
+         do j=1,7
+            do i=1,3
+               write (*,*) "Element ", i, j, k, " of array: ", fixed_array(i, j, k)
+            end do
+         end do
+      end do
+    end subroutine c_test_array2
 end module LogLikeCosmoLSS1_interface

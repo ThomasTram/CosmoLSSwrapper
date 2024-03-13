@@ -5,11 +5,17 @@ module LogLikeCosmoLSS_module
   integer, parameter :: mcp= KIND(1.d0)
   integer :: Curvature
   real(mcp) :: CPr
+  integer, parameter :: const_neangbins = 9
+  integer, parameter :: const_nell = 58999
+  integer, parameter :: const_num_z = 370
+  integer, parameter :: const_num_z_lens = 170
   Type :: myCMBparam
      real(mcp) :: H0
      real(mcp) :: h
      real(mcp) :: omdm
      real(mcp) :: omb
+     real(mcp) :: omc
+     real(mcp) :: omnu
      real(mcp) :: omk
   end Type myCMBparam
   Type :: myMultipoleOverlaps
@@ -17,23 +23,43 @@ module LogLikeCosmoLSS_module
      real(mcp) :: z_eff, k_min_theory, dk_theory, k_spacing_obs, k_min_obs
      INTEGER :: k_num_obs,size_convolution, k_num_conv
   end type myMultipoleOverlaps
+  Type :: myCalculator
+  contains
+     procedure :: AngularDiameterDistance
+     procedure :: AngularDiameterDistance2
+     procedure :: ComovingRadialDistance
+     procedure :: rofChi
+     procedure :: Hofz
+  end Type myCalculator
   type this_type
  !    real(mcp), dimension(2,70) :: arraysjorig1,arraysjorig2,arraysjorig3,arraysjorig4
-     real(mcp), dimension(2,70,4) :: arraysjfull
+      real(mcp), dimension(2,70,4) :: arraysjfull4bins
+      real(mcp), dimension(2,120,5) :: arraysjfullkv450
+      real(mcp), dimension(2,119,5) :: arraysjfull
      real(mcp), dimension(2,29) :: arraysjlenslowz,arraysjlens2dfloz
      real(mcp), dimension(2,28) :: arraysjlenscmass,arraysjlens2dfhiz
-     real(mcp), allocatable, dimension(:) :: xipm !4 tom-bins, 9 ang-bins, 2 for +/- gives 10*9*2 = 180
+     real(mcp), dimension(10,9) :: kv450c12
+     real(mcp), dimension(5,5) :: somdzcholesky, somdzcovinv
+     real(mcp), dimension(5) :: somdzmean = [0d0, -0.002d0, -0.013d0, -0.011d0, 0.006d0]
+     real(mcp), allocatable, dimension(:) :: ellarr, prefacarrz, xipm !4 tom-bins, 9 ang-bins, 2 for +/- gives 10*9*2 = 180
      real(mcp), allocatable, dimension(:,:) :: invcovxipm !, covxipm, invcovxipm,covxipminv !nzbins*(nzbins+1)*nangbins
 !     real(mcp), dimension(9) :: thetacfhtini, thetaradcfhtini !nangbins
-     real(mcp), dimension(58999) :: ellgentestarrini
+     real(mcp), dimension(const_nell) :: ellgentestarrini
      real(mcp), allocatable,dimension(:) :: maskelements
-     real(mcp), dimension(9,58999) :: bes0arr,bes4arr,bes2arr
+     real(mcp), dimension(const_neangbins, const_nell) :: bes0arr,bes4arr,bes2arr
      integer :: size_cov,size_covmask,sizcov,sizcovpremask,klinesum,set_scenario,size_covallmask
-     logical :: use_morell, use_rombint, use_conservative, use_analyticcov, use_largescales, use_bootstrapnz, write_theoryfiles, use_accuracyboost, print_timelike
+     logical :: use_morell, use_rombint, use_conservative, use_analyticcov, use_largescales, use_bootstrapnz, write_theoryfiles, use_accuracyboost, print_timelike, print_parameters
      type(myMultipoleOverlaps) :: cmass_mp_overlap, lowz_mp_overlap, twodfloz_mp_overlap, twodfhiz_mp_overlap
-     logical :: use_cmass_overlap, use_lowz_overlap, use_2dfloz_overlap, use_2dfhiz_overlap
+     logical :: use_cmass_overlap, use_lowz_overlap, use_2dfloz_overlap, use_2dfhiz_overlap, use_cholesky
      real(mcp), allocatable, dimension(:) :: exact_z
-     integer :: num_z !, exact_z_index
+     integer :: num_z = const_num_z !, exact_z_index
+     integer :: wtrapmax = const_num_z
+     integer :: nangbins = const_neangbins
+     integer :: nell = const_nell
+     integer :: wtrapmaxlens = const_num_z_lens
+     integer :: nellbins
+     real(mcp), dimension(const_num_z_lens) :: exact_zlenslowz, exact_zlenscmass
+     type(myCalculator) :: Calculator
   end type this_type
 
   Type(this_type) :: this
@@ -124,8 +150,9 @@ module LogLikeCosmoLSS_module
     logk = max(log10(k),LinearPowerspectrum%x(1))
     NL_MPKPowerAt =NonlinearPowerspectrum%Value(logk,z)
   end function NL_MPKPowerAt
-    
-  function ComovingRadialDistance(z)
+  
+  function ComovingRadialDistance(this, z)
+    class(myCalculator), intent(in) :: this
     real(mcp) ComovingRadialDistance
     real(mcp), intent(in) :: z
 
@@ -133,8 +160,9 @@ module LogLikeCosmoLSS_module
 
   end function ComovingRadialDistance
 
-  function Hofz(z)
+  function Hofz(this, z)
     !!non-comoving Hubble in MPC units, divide by MPC_in_sec to get in SI units
+    class(myCalculator), intent(in) :: this
     real(mcp) Hofz, dtauda,a
     real(mcp), intent(in) :: z
 
@@ -143,25 +171,28 @@ module LogLikeCosmoLSS_module
     
   end function Hofz
   
-  function AngularDiameterDistance(z)
+  function AngularDiameterDistance(this, z)
     !This is the physical (non-comoving) angular diameter distance in Mpc
+    class(myCalculator), intent(in) :: this
     real(mcp) AngularDiameterDistance
     real(mcp), intent(in) :: z
 
-    AngularDiameterDistance = CPr/(1d0+z)*rofChi(ComovingRadialDistance(z) /CPr)
+    AngularDiameterDistance = CPr/(1d0+z)*this%rofChi(this%ComovingRadialDistance(z) /CPr)
 
   end function AngularDiameterDistance
 
-  function AngularDiameterDistance2(z1, z2) ! z1 < z2
+  function AngularDiameterDistance2(this, z1, z2) ! z1 < z2
     !From http://www.slac.stanford.edu/~amantz/work/fgas14/#cosmomc
+    class(myCalculator), intent(in) :: this
     real(mcp) AngularDiameterDistance2
     real(mcp), intent(in) :: z1, z2
 
-    AngularDiameterDistance2 = CPr/(1+z2)*rofChi(ComovingRadialDistance(z2)/CPr - ComovingRadialDistance(z1)/CPr)
+    AngularDiameterDistance2 = CPr/(1+z2)*this%rofChi(this%ComovingRadialDistance(z2)/CPr - this%ComovingRadialDistance(z1)/CPr)
 
   end function AngularDiameterDistance2
 
-  function rofChi(Chi) !sinh(chi) for open, sin(chi) for closed.
+  function rofChi(this, Chi) !sinh(chi) for open, sin(chi) for closed.
+    class(myCalculator), intent(in) :: this
     real(mcp) Chi,rofChi
 
     if (Curvature .eq. 1) then
@@ -176,7 +207,7 @@ module LogLikeCosmoLSS_module
   function f_K(x)
     real(mcp) :: f_K
     real(mcp), intent(in) :: x
-    f_K = CPr*rofChi(x/CPr)
+    f_K = CPr*this%Calculator%rofChi(x/CPr)
   end function f_K
 
 
