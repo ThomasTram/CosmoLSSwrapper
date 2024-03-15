@@ -23,9 +23,23 @@ substitutions = {r'Theory%MPK%ny':r'NonlinearPowerspectrum%ny',
                  r'function CosmoLSS_LnLike(this,CMB,Theory,DataParams)':r'function CosmoLSS_LnLike(DataParams)',
                  r'== .':r'.eqv. .',
                  r'CMB%h0/100':r'CMB%h0/100d0',
-                 r'real(mcp) :: DataParams(:)':'real(mcp), intent(in) :: DataParams(19) \n real(mcp), parameter :: c = 2.99792458d8',
+                 r'real(mcp) :: DataParams(:)':'real(mcp), intent(in) :: DataParams(:) \n real(mcp), parameter :: c = 2.99792458d8',
                  r'Type(CosmoLSSLikelihood)':r'Type(this_type)',
                 }
+
+integrand_functions = ['sjclsobjnoweight','sjclsobjonlyweight','sjclsiiobjonlyweight','sjclsobjsf','sjclsiiobjsf','sjclsgiobjsf','sjclscrossobjnoweight',
+                       'sjclscrossobjonlyweight','sjclscrossobj','sjclscrossobjsf','sjclscrossgiobjsf','weightobjcubic']
+# Iterate over the list of integrand function names
+for function_name in integrand_functions:
+    nan_check_lines = f"""
+        ! Check for NaN in the result
+        if (ISNAN({function_name})) then
+            ! Handle NaNs gracefully, for example:
+            {function_name} = 0.0
+        endif
+    """    
+    # Generate replacement dictionary entry for the current function
+    substitutions[f"END function {function_name}\n"] = f"{nan_check_lines}\nend function {function_name}\n"
 
 firstCMBparam = True
 for i, line in enumerate(all_lines):

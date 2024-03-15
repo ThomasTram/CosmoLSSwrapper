@@ -165,7 +165,7 @@ contains
    end subroutine c_set_sources
 
    subroutine c_CosmoLSS_LnLike(DataParams, loglkl) bind(c)
-     real(c_double), dimension(19), intent(in) :: DataParams
+     real(c_double), dimension(27), intent(in) :: DataParams
      real(c_double), intent(out) :: loglkl
      loglkl = CosmoLSS_LnLike(DataParams)
    end subroutine c_CosmoLSS_LnLike

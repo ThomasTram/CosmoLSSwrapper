@@ -156,15 +156,14 @@ class CosmoLSS(Likelihood_sn):
             if self.use_cholesky:
                 self.somdzcholesky = np.loadtxt(self.data_directory+'/lensingrsdfiles/kids1000_SOM_cov_multiplied_cholesky.dat')
             masktemp =  np.loadtxt(self.data_directory+'/lensingrsdfiles/kids1000maskxipm.dat',usecols=(1,))
-            covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/kids1000cov_xipmsubspace.dat',usecols=(2,))
+            covxipmtemp = np.loadtxt(self.data_directory+'/lensingrsdfiles/kids1000cov_xipmsubspace.dat')
 
         #!Else missing
         if (self.set_scenario == -2 or self.set_scenario == -3):
             if self.set_scenario == -2:
                 multarr_values = [-0.0128, -0.0104, -0.0114, 0.0072, 0.0061]
             elif self.set_scenario == -3:
-                multarr_values = [-0.009, -0.011, -0.015, 0.002, 0.007]
-                somdzmean_values = [0, -0.002, -0.013, -0.011, 0.006]
+                multarr_values = [-0.009, -0.011, -0.015, 0.002, 0.007] 
 
             # Construct division factors
             division_factors = [(1.0 + multarr_values[i]) / (1.0 + multarr_values[j]) for i in range(5) for j in range(i+1)]
@@ -177,6 +176,7 @@ class CosmoLSS(Likelihood_sn):
         #Store sizes:
         self.sizcov = math.isqrt(covxipmtemp.shape[0])
         self.sizcovpremask = masktemp.shape[0]
+        self.size_covallmask = self.sizcov
 
 
         self.xipm = xipmtemp
@@ -188,9 +188,16 @@ class CosmoLSS(Likelihood_sn):
         self.invcovxipm = la.inv(self.covxipm)
 
         #!converted from arcmin to degrees
-        self.thetacfhtini = np.array([0.71336, 1.45210, 2.95582, 6.01675, 12.24745, 24.93039, 50.74726, 103.29898, 210.27107])/60.0 #!athena angular scales (deg) --- 9 ang bins
-        self.thetaradcfhtini = self.thetacfhtini*np.pi/180.0 #!converted to rad
-        self.ellgentestarrini = np.array(range(2,59001),dtype='float64')
+        if self.set_scenario >= 0:
+            thetacfhtini_deg = np.array([0.71336, 1.45210, 2.95582, 6.01675, 12.24745, 24.93039, 50.74726, 103.29898, 210.27107]) / 60.0
+        elif self.set_scenario == -2:
+            thetacfhtini_deg = np.array([0.7588895, 1.544764, 3.144456, 6.400723, 13.02904, 26.52137, 53.98579, 109.8912, 223.6899]) / 60.0
+        elif self.set_scenario == -3:
+            thetacfhtini_deg = np.array([0.7588895, 1.544764, 3.144456, 6.400723, 13.02904, 26.52137, 53.98579, 109.8912, 223.6899]) / 60.0
+
+        self.thetaradcfhtini = thetacfhtini_deg * np.pi / 180.0
+        nell = 58999
+        self.ellgentestarrini = np.arange(2, nell + 2, dtype='float64')
 
         #!Generate array containing l-values where C(l) is evaluated
         if self.use_morell:
@@ -207,7 +214,7 @@ class CosmoLSS(Likelihood_sn):
             elif ellgenini > 10 or ellgenini == 10:
                 self.ellarr[ellgenini - 1] = self.ellarr[ellgenini - 2] + morellfac*self.ellarr[ellgenini - 2]
 
-        self.ellarr = self.ellarr.astype(int)
+        self.ellarr = np.floor(self.ellarr)
         self.prefacarrz = ((self.ellarr + 2.0) * (self.ellarr + 1.0) * self.ellarr * (self.ellarr - 1.0)) ** 0.5 / (self.ellarr + 0.5) ** 2.0
 
         #!compute Bessel functions
@@ -251,7 +258,7 @@ class CosmoLSS(Likelihood_sn):
         self.Nz = 38
         self.logkh_for_pk = np.linspace(-4,2.2,self.Nk)
         self.kh_for_pk = 10**self.logkh_for_pk
-        self.z_for_pk = np.linspace(0,4.1,self.Nz)
+        self.z_for_pk = np.linspace(0,6.1,self.Nz)
 
         # Push some fields in the python class to the corresponding derived type in Fortran, called this:
         intParams = np.array([self.size_cov, self.sizcov, self.klinesum, self.set_scenario, self.size_covallmask],dtype='int32')
@@ -270,44 +277,35 @@ class CosmoLSS(Likelihood_sn):
 
     def update_sources(self, bootnum=0):
         data_list = []
-        if self.use_bootstrapnz and self.setscenario >= 0:
+        if self.use_bootstrapnz and self.set_scenario >= 0:
             for i in range(1, 5):
-                filename = f'data/lensingrsdfiles/nz_z{i}_kids_binned_hendrik.dat'
+                filename = self.data_directory + f'/lensingrsdfiles/nz_z{i}_kids_binned_hendrik.dat'
                 data = np.loadtxt(filename)
                 data_list.append(data)
-        elif not self.use_bootstrapnz and self.setscenario >= 0:
+        elif not self.use_bootstrapnz and self.set_scenario >= 0:
             for i in range(1, 5):
-                filename = f'data/lensingrsdfiles/nz_z{i}_kids_binned.dat'
+                filename = self.data_directory + f'/lensingrsdfiles/nz_z{i}_kids_binned.dat'
                 data = np.loadtxt(filename)
                 data_list.append(data)
-        elif self.setscenario == -2:
+        elif self.set_scenario == -2:
             for i in range(1, 6):
-                filename = f'data/lensingrsdfiles/nz_z{i}_kv450_meannew_blindb.dat'
+                filename = self.data_directory + f'/lensingrsdfiles/nz_z{i}_kv450_meannew_blindb.dat'
                 data = np.loadtxt(filename)
                 data_list.append(data)
-        elif self.setscenario == -3:
+        elif self.set_scenario == -3:
             for i in range(1, 6):
-                filename = f'data/lensingrsdfiles/kids1000nz{i}.dat'
+                filename = self.data_directory + f'/lensingrsdfiles/kids1000nz{i}.dat'
                 data = np.loadtxt(filename)
                 data_list.append(data)
+        
+        # Normalize data_list
+        for data in data_list:
+            data[:, 1] /= np.sum(data[:, 1]) * 0.05  # Normalize the second column
         
         # Concatenate data from list of arrays
-        concatenated_data = np.array(data_list)
+        concatenated_data = np.array(data_list, order='C')
         
-        # Normalize concatenated data
-        concatenated_data /= (np.sum(concatenated_data, axis=1, keepdims=True) * 0.05)
-
         set_sources(concatenated_data)
-        if False:
-            # !!!Reading in source distributions according to bootnum
-            #print 'Using bootstrap '+str(bootnum)
-            arraysjfull = []
-            for nz in range(4):
-                fname = self.data_directory+'/lensingrsdfiles/hendriknz/nz_z'+str(nz+1)+'_kids_boot'+str(bootnum)+'.dat' #!bootstrap DIR
-                tmp = np.loadtxt(fname)
-                tmp[:,1] /= (np.sum(tmp[:,1])*0.05)
-                arraysjfull.append(tmp)
-            set_sources(arraysjfull[0],arraysjfull[1],arraysjfull[2],arraysjfull[3])
         
     def loglkl(self, cosmo, data):
         """
@@ -351,5 +349,7 @@ class CosmoLSS(Likelihood_sn):
         loglkl = loglkl_from_fortran(**nuisance)
         # Free interpolation structures
         interpolation_free_all()
+        # Add priors (Please check!)
+        loglkl += (nuisance['dcamp']/0.00023)**2
         # Remember correct sign
         return -loglkl

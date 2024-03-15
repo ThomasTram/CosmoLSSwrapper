@@ -76,12 +76,15 @@ def test_array2(ar[double,ndim=3] source_data):
     return
 
 def loglkl_from_fortran(sigma_v_cmass=-1,b1_cmass=-1,N_shot_cmass=-1,sigv_lowz=-1, b1_lowz=-1,N_shot_lowz=-1,b1_2dfloz=-1,
-                            b1_2dfhiz=-1,sigv_2dfloz=-1,sigv_2dfhiz=-1,N_shot_2dfloz=-1,N_shot_2dfhiz=-1,ampia=-1,
-                            redzia=-1,lumia=-1,a1phot=-1,a2phot=-1,a3phot=-1,a4phot=-1):
+                            b1_2dfhiz=-1,sigv_2dfloz=-1,sigv_2dfhiz=-1,N_shot_2dfloz=-1,N_shot_2dfhiz=-1,ampia=-1,redzia=-1,lumia=-1,
+                            a1phot=-1,a2phot=-1,a3phot=-1,a4phot=-1,a5phot=-1,c12amp=-1,dcamp=-1,m1amp=-1,m2amp=-1,m3amp=-1,m4amp=-1,m5amp=-1):
     cdef:
         double loglkl
-        ar[double,ndim=1] DataParams = np.array([sigma_v_cmass,b1_cmass,N_shot_cmass,sigv_lowz, b1_lowz,N_shot_lowz,b1_2dfloz,
-                            b1_2dfhiz,sigv_2dfloz,sigv_2dfhiz,N_shot_2dfloz,N_shot_2dfhiz,ampia,
-                            redzia,lumia,a1phot,a2phot,a3phot,a4phot])
+        ar[double,ndim=1] DataParams = np.array(
+            [sigma_v_cmass, b1_cmass, N_shot_cmass, sigv_lowz, b1_lowz, N_shot_lowz, b1_2dfloz, 
+            b1_2dfhiz, sigv_2dfloz, sigv_2dfhiz, N_shot_2dfloz, N_shot_2dfhiz, 
+            ampia, redzia, lumia, a1phot, a2phot, a3phot, a4phot, a5phot, 
+            c12amp, dcamp, m1amp, m2amp, m3amp, m4amp, m5amp])
+            
     c_cosmolss_lnlike(<double *> DataParams.data, &loglkl)
     return loglkl
