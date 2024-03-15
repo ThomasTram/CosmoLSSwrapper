@@ -60,13 +60,7 @@ class CosmoLSS(Likelihood_sn):
             # Read the .dataset file specifying the data.
             super(CosmoLSS, self).__init__(path, data, command_line)
         except IOError:
-            raise io_mp.LikelihoodError(
-                "The CosmoLSS data files were not found. Please download the "
-                "following link "
-                "httpsmomc.tgz"
-                ", extract it, and copy the BK14 folder inside"
-                "`BK14_cosmomc/data/` to `your_montepython/data/`")
-        
+            raise io_mp.LikelihoodError('The CosmoLSS data files were not found.')
         
         arguments = {
             'output': 'mPk',
@@ -105,14 +99,36 @@ class CosmoLSS(Likelihood_sn):
             self.lens_redshifts[samplename][:,1] /= (np.sum(self.lens_redshifts[samplename][:,1])*0.01)
                                                                     
         # !!!Reading in source distributions
-        self.arraysjfull = []
-        for nz in range(4):
-            fname = self.data_directory+'/lensingrsdfiles/hendriknz/nz_z'+str(nz+1)+'_kids_boot'+str(0)+'.dat' #!bootstrap DIR
-            tmp = np.loadtxt(fname)
-            tmp[:,1] /= (np.sum(tmp[:,1])*0.05)
-            self.arraysjfull.append(tmp)
-
-
+        data_list = []
+        if self.use_bootstrapnz and self.set_scenario >= 0:
+            for i in range(1, 5):
+                filename = self.data_directory + f'/lensingrsdfiles/nz_z{i}_kids_binned_hendrik.dat'
+                data = np.loadtxt(filename)
+                data_list.append(data)
+        elif not self.use_bootstrapnz and self.set_scenario >= 0:
+            for i in range(1, 5):
+                filename = self.data_directory + f'/lensingrsdfiles/nz_z{i}_kids_binned.dat'
+                data = np.loadtxt(filename)
+                data_list.append(data)
+        elif self.set_scenario == -2:
+            for i in range(1, 6):
+                filename = self.data_directory + f'/lensingrsdfiles/nz_z{i}_kv450_meannew_blindb.dat'
+                data = np.loadtxt(filename)
+                data_list.append(data)
+        elif self.set_scenario == -3:
+            for i in range(1, 6):
+                filename = self.data_directory + f'/lensingrsdfiles/kids1000nz{i}.dat'
+                data = np.loadtxt(filename)
+                data_list.append(data)
+        
+        # Normalize data_list
+        for data in data_list:
+            data[:, 1] /= np.sum(data[:, 1]) * 0.05  # Normalize the second column
+        
+        # Concatenate data from list of arrays
+        self.sources_for_scenario = np.array(data_list, order='C')
+        # We must call set_sources at the end, after this%set_scenario has been set
+        
         #!!!Reading in measurements and masks and covariances
         if self.set_scenario == 1:
             if self.use_analyticcov:
@@ -272,40 +288,8 @@ class CosmoLSS(Likelihood_sn):
                      self.ellgentestarrini, self.maskelements, len(self.maskelements),
                      self.bes0arr, self.bes4arr, self.bes2arr, intParams, logParams)
         
-        # Set the sources in the Fortran module
-        self.update_sources()
-
-    def update_sources(self, bootnum=0):
-        data_list = []
-        if self.use_bootstrapnz and self.set_scenario >= 0:
-            for i in range(1, 5):
-                filename = self.data_directory + f'/lensingrsdfiles/nz_z{i}_kids_binned_hendrik.dat'
-                data = np.loadtxt(filename)
-                data_list.append(data)
-        elif not self.use_bootstrapnz and self.set_scenario >= 0:
-            for i in range(1, 5):
-                filename = self.data_directory + f'/lensingrsdfiles/nz_z{i}_kids_binned.dat'
-                data = np.loadtxt(filename)
-                data_list.append(data)
-        elif self.set_scenario == -2:
-            for i in range(1, 6):
-                filename = self.data_directory + f'/lensingrsdfiles/nz_z{i}_kv450_meannew_blindb.dat'
-                data = np.loadtxt(filename)
-                data_list.append(data)
-        elif self.set_scenario == -3:
-            for i in range(1, 6):
-                filename = self.data_directory + f'/lensingrsdfiles/kids1000nz{i}.dat'
-                data = np.loadtxt(filename)
-                data_list.append(data)
-        
-        # Normalize data_list
-        for data in data_list:
-            data[:, 1] /= np.sum(data[:, 1]) * 0.05  # Normalize the second column
-        
-        # Concatenate data from list of arrays
-        concatenated_data = np.array(data_list, order='C')
-        
-        set_sources(concatenated_data)
+        # Set sources
+        set_sources(self.sources_for_scenario)
         
     def loglkl(self, cosmo, data):
         """
