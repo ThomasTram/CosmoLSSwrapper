@@ -2,7 +2,7 @@
 FC ?= gcc
 CC ?= gcc
 
-FFLAGS = -cpp -O3 -ffree-line-length-none -fopenmp -fmax-errors=10 -fbounds-check -g -fbacktrace -ffpe-trap=invalid
+FFLAGS = -cpp -fPIC -O3 -ffree-line-length-none -fopenmp -fmax-errors=10 -fbounds-check -g -fbacktrace -ffpe-trap=invalid
 #FFLAGS = -cpp -fPIC -fbounds-check -g -O0 -Wall -Wextra -fbacktrace -ffpe-trap=invalid,zero,overflow
 LNK =
 
